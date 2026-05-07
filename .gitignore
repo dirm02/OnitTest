@@ -94,6 +94,7 @@ cython_debug/
 # Logs
 *.log
 logs/
+output/
 
 # Docker
 .docker/

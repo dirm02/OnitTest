@@ -10,3 +10,6 @@
 
 [context.deploy-preview.environment]
   NEXT_PUBLIC_APP_ENV = "preview"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
