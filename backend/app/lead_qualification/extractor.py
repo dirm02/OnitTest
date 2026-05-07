@@ -66,8 +66,10 @@ def extract_lead_updates(message: str) -> LeadState:
         )
 
     if re.search(
-        r"\b(no current provider|no provider|without (?:a )?provider|do(?:n't| not) have "
-        r"(?:a )?(?:current )?provider)\b",
+        r"\b(no (?:current )?(?:electricity |energy |utility )?provider|"
+        r"without (?:a )?(?:current )?(?:electricity |energy |utility )?provider|"
+        r"do(?:n't| not) have (?:a )?(?:current )?"
+        r"(?:electricity |energy |utility )?provider)\b",
         text,
     ):
         updates.has_provider = LeadSlot(value=False, status=SlotStatus.CONFIRMED)

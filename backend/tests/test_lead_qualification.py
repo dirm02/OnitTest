@@ -77,6 +77,18 @@ def test_no_current_provider_is_tier_1():
     assert classification.matched_rule == "any_no_current_provider"
 
 
+def test_no_current_electricity_provider_phrase_is_tier_1():
+    result = LeadQualificationFlow().run_turn(
+        "Prospect has no current electricity provider. Commercial warehouse, "
+        "around 40 MWh annually, fixed term details unknown."
+    )
+
+    assert result.state.has_provider.value is False
+    assert result.classification.tier == "Tier 1"
+    assert result.classification.matched_rule == "any_no_current_provider"
+    assert result.trace["next_question"] is None
+
+
 def test_square_footage_fallback_estimates_usage_when_unknown():
     state = LeadState(
         business_segment=LeadSlot(value="commercial", status=SlotStatus.CONFIRMED),

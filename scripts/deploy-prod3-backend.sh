@@ -3,6 +3,11 @@ set -euo pipefail
 
 APP_DIR="/opt/onittest-abc-energy"
 REPO_URL="https://github.com/dirm02/OnitTest.git"
+ENV_BACKUP="/tmp/onittest-backend.env"
+
+if [ -f "${APP_DIR}/backend/.env" ]; then
+  cp "${APP_DIR}/backend/.env" "${ENV_BACKUP}"
+fi
 
 if [ ! -d "${APP_DIR}/.git" ]; then
   rm -rf "${APP_DIR}"
@@ -14,7 +19,10 @@ fi
 
 cd "${APP_DIR}"
 
-cat > backend/.env <<'ENVEOF'
+if [ -f "${ENV_BACKUP}" ]; then
+  cp "${ENV_BACKUP}" backend/.env
+else
+  cat > backend/.env <<'ENVEOF'
 PROJECT_NAME=onit_test
 DEBUG=true
 ENVIRONMENT=local
@@ -29,6 +37,7 @@ GOOGLE_API_KEY=
 AI_MODEL=gemini-2.5-flash
 CORS_ORIGINS=["https://dirm02-onittest-abc-energy.netlify.app","http://52.165.83.50:8000"]
 ENVEOF
+fi
 
 docker rm -f onit_test_db onit_test_backend >/dev/null 2>&1 || true
 docker compose -f docker-compose.azure.yml down --remove-orphans

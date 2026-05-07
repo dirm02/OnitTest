@@ -153,7 +153,7 @@ export function LeadQualificationAssistant() {
               Sales intake
             </Badge>
             <Badge className="border-[#c7d8e0] bg-[#eef6f8] text-[#28505e]" variant="outline">
-              CRA review
+              Lead review
             </Badge>
           </div>
         </header>
