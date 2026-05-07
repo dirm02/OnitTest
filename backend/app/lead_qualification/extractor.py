@@ -25,9 +25,11 @@ def extract_lead_updates(message: str) -> LeadState:
     text = message.lower()
     updates = LeadState()
 
-    if re.search(r"\b(industrial|manufactur(?:ing|er)|factory|plant|warehouse)\b", text):
+    if re.search(r"\bcommercial\b", text):
+        updates.business_segment = LeadSlot(value="commercial", status=SlotStatus.CONFIRMED)
+    elif re.search(r"\b(industrial|manufactur(?:ing|er)|factory|plant|warehouse)\b", text):
         updates.business_segment = LeadSlot(value="industrial", status=SlotStatus.CONFIRMED)
-    elif re.search(r"\b(commercial|office|retail|store|restaurant|clinic)\b", text):
+    elif re.search(r"\b(office|retail|store|restaurant|clinic)\b", text):
         updates.business_segment = LeadSlot(value="commercial", status=SlotStatus.CONFIRMED)
 
     usage = re.search(rf"({NUMBER})\s*(?:mwh|megawatt[- ]?hours?)\b", text) or re.search(

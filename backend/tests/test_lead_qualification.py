@@ -83,6 +83,7 @@ def test_no_current_electricity_provider_phrase_is_tier_1():
         "around 40 MWh annually, fixed term details unknown."
     )
 
+    assert result.state.business_segment.value == "commercial"
     assert result.state.has_provider.value is False
     assert result.classification.tier == "Tier 1"
     assert result.classification.matched_rule == "any_no_current_provider"
