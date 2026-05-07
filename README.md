@@ -40,9 +40,9 @@ The tool lets that internal reviewer paste messy prospect notes into a guided ch
 
 The key engineering decision was to keep the final qualification rules deterministic. Gemini can help with extraction, but it does not decide the tier. That makes the output testable, auditable, and safer for a hiring challenge where the business matrix matters more than open-ended chat.
 
-## What We Believe The Test Asked For
+## Interpretation Of The Test
 
-The prompt was intentionally vague, so we made one product assumption explicit:
+The prompt was intentionally vague, so I made one product assumption explicit:
 
 **This is an internal lead qualification assistant for ABC Energy Solutions, not a customer-facing chatbot.**
 
@@ -57,7 +57,7 @@ That means the workflow is:
 7. If information is missing, the assistant asks the next useful question.
 8. The result is saved for internal review.
 
-We intentionally did not build a public onboarding funnel where external clients qualify themselves. That would add privacy, consent, abuse prevention, authentication, and UX questions that are outside a focused PoC.
+I intentionally did not build a public onboarding funnel where external clients qualify themselves. That would add privacy, consent, abuse prevention, authentication, and UX questions that are outside a focused PoC.
 
 ## Live System
 
@@ -81,7 +81,7 @@ Production shape:
 
 The MVP is functionally complete for submission.
 
-We completed the user-facing internal workflow:
+The user-facing internal workflow is complete:
 
 - ABC Energy branded internal qualification workspace.
 - Guided chat interface for pasted prospect notes.
@@ -92,7 +92,7 @@ We completed the user-facing internal workflow:
 - Saved leads panel for recent qualification sessions.
 - Deployed frontend and backend.
 
-We completed the backend foundation:
+The backend foundation is complete:
 
 - `POST /api/v1/lead/turn` for one qualification turn.
 - `GET /api/v1/lead/sessions` for recent saved leads.
@@ -107,7 +107,7 @@ We completed the backend foundation:
 
 ## Senior Engineering Problems Resolved
 
-We resolved 13 senior SWE-level problems in the PoC:
+This PoC resolves 13 senior SWE-level problems:
 
 | # | Problem | How it was handled |
 |---:|---|---|
@@ -127,7 +127,7 @@ We resolved 13 senior SWE-level problems in the PoC:
 
 ## Bonus Coverage
 
-We completed 4 solid bonus items and 2 partial bonus items.
+The project completes 4 solid bonus items and 2 partial bonus items.
 
 | Bonus area | Status | Notes |
 |---|---|---|
@@ -253,9 +253,9 @@ Content-Type: application/json
 
 When Gemini is unavailable or returns an error, the response still completes through deterministic extraction and the trace source reports the fallback path.
 
-## What We Intentionally Did Not Fully Build
+## What Was Intentionally Not Fully Built
 
-This was a PoC, so we did not pretend it was a finished enterprise system.
+This was a PoC, so I did not present it as a finished enterprise system.
 
 | Area | Decision |
 |---|---|
