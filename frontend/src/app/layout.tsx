@@ -8,6 +8,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "ABC Energy Solutions Lead Qualification",
   description: "Internal energy lead qualification workspace for ABC Energy Solutions",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
