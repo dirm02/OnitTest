@@ -22,6 +22,7 @@ Internal lead qualification MVP for ABC Energy Solutions.
 ![PocketFlow](https://img.shields.io/badge/Orchestration-PocketFlow-2f6f4e)
 ![Netlify](https://img.shields.io/badge/Frontend-Netlify-00C7B7?logo=netlify&logoColor=white)
 ![Azure](https://img.shields.io/badge/Backend-Azure_VM-0078D4?logo=microsoftazure&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 <br />
 <br />
@@ -302,3 +303,7 @@ The VM-specific compose file exposes FastAPI on port `8000` and keeps PostgreSQL
 ## Project Status
 
 The MVP is deployed and usable end to end. The live system can classify the core matrix scenarios, route lead API calls through Netlify to Azure, and display a clear internal qualification workflow for ABC Energy Solutions.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
