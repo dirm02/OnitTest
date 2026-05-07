@@ -2,7 +2,7 @@
 
 # ABC Energy Lead Qualification Workspace
 
-Internal lead qualification MVP for ABC Energy Solutions.
+Proof of concept for the ABC Energy Solutions hiring challenge.
 
 <a href="https://dirm02-onittest-abc-energy.netlify.app">Live Demo</a>
 |
@@ -18,10 +18,11 @@ Internal lead qualification MVP for ABC Energy Solutions.
 ![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178C6?logo=typescript&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Ready-4169E1?logo=postgresql&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Persistence-4169E1?logo=postgresql)
 ![PocketFlow](https://img.shields.io/badge/Orchestration-PocketFlow-2f6f4e)
+![Gemini](https://img.shields.io/badge/LLM-Google_Gemini-4285F4?logo=google)
 ![Netlify](https://img.shields.io/badge/Frontend-Netlify-00C7B7?logo=netlify&logoColor=white)
-![Azure](https://img.shields.io/badge/Backend-Azure_VM-0078D4?logo=microsoftazure&logoColor=white)
+![Azure](https://img.shields.io/badge/Backend-Azure_VM-0078D4?logo=microsoftazure)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 <br />
@@ -31,11 +32,32 @@ Internal lead qualification MVP for ABC Energy Solutions.
 
 </div>
 
-## Overview
+## Executive Summary
 
-This repository contains a full-stack proof of concept for the ABC Energy Solutions hiring challenge. The product is an internal sales intake workspace: an ABC Energy team member pastes prospect notes from a call, CRM record, spreadsheet row, email, or research snippet, and the assistant turns those notes into a structured lead profile.
+This project solves the hiring test as an internal proof of concept, not as a fully commercialized SaaS product. The user is an ABC Energy Solutions internal reviewer, CRA team member, sales operator, or business development teammate who already has prospect information from calls, CRM records, spreadsheets, emails, or research notes.
 
-The MVP collects the required qualification variables, runs the Strategic Lead Matrix, and returns a deterministic tier recommendation. The LLM provider is configured for future extraction work, but the current tiering logic stays outside the model so it remains testable, explainable, and auditable.
+The tool lets that internal reviewer paste messy prospect notes into a guided chat. The backend extracts lead facts, maintains a structured lead state, asks for missing qualification fields, applies the Strategic Lead Matrix, and returns an explainable tier recommendation.
+
+The key engineering decision was to keep the final qualification rules deterministic. Gemini can help with extraction, but it does not decide the tier. That makes the output testable, auditable, and safer for a hiring challenge where the business matrix matters more than open-ended chat.
+
+## What We Believe The Test Asked For
+
+The prompt was intentionally vague, so we made one product assumption explicit:
+
+**This is an internal lead qualification assistant for ABC Energy Solutions, not a customer-facing chatbot.**
+
+That means the workflow is:
+
+1. An internal reviewer opens the workspace.
+2. The reviewer pastes information they already have about a potential client.
+3. The assistant extracts the known facts.
+4. The assistant shows which fields are captured and which are missing.
+5. The backend applies deterministic tier rules.
+6. If enough information exists, the assistant returns the tier and reason.
+7. If information is missing, the assistant asks the next useful question.
+8. The result is saved for internal review.
+
+We intentionally did not build a public onboarding funnel where external clients qualify themselves. That would add privacy, consent, abuse prevention, authentication, and UX questions that are outside a focused PoC.
 
 ## Live System
 
@@ -43,49 +65,81 @@ The MVP collects the required qualification variables, runs the Strategic Lead M
 |---|---|
 | Frontend | https://dirm02-onittest-abc-energy.netlify.app |
 | Health check | https://dirm02-onittest-abc-energy.netlify.app/api/v1/health |
-| Lead endpoint | `POST https://dirm02-onittest-abc-energy.netlify.app/api/v1/lead/turn` |
+| Lead turn endpoint | `POST https://dirm02-onittest-abc-energy.netlify.app/api/v1/lead/turn` |
+| Saved sessions endpoint | `GET https://dirm02-onittest-abc-energy.netlify.app/api/v1/lead/sessions` |
 | Netlify project | https://app.netlify.com/projects/dirm02-onittest-abc-energy |
 
 Production shape:
 
 - Netlify hosts the Next.js frontend.
-- Netlify proxies `/api/v1/lead/*` to the Azure VM backend.
+- Netlify proxies `/api/v1/lead/*` and `/api/v1/health` to the Azure VM backend.
 - Azure VM `Prod3` runs FastAPI and PostgreSQL with Docker Compose.
-- The backend keeps provider keys in `/opt/onittest-abc-energy/backend/.env`.
+- PostgreSQL is kept internal to the VM.
+- Provider keys are stored only on the backend in `/opt/onittest-abc-energy/backend/.env`.
 
-## What We Built
+## What Is Complete For MVP
 
-- Internal ABC Energy branded lead qualification workspace.
-- Guided chat UI with quick-start prompts for prospect notes, known usage, and facility-size estimation.
-- FastAPI endpoint for one qualification turn: `POST /api/v1/lead/turn`.
-- Explicit `LeadState` with `unknown`, `inferred`, and `confirmed` slot statuses.
-- PocketFlow orchestration for extract, merge, estimate, classify, plan, and respond steps.
-- Deterministic Python rule engine for the Strategic Lead Matrix.
-- Square-footage fallback when annual MWh is unavailable.
-- Netlify production deployment with Next.js runtime support.
-- Azure VM backend deployment with Postgres kept internal.
-- Focused pytest coverage for the matrix, fallback, and extraction edge cases.
+The MVP is functionally complete for submission.
 
-## User Flow
+We completed the user-facing internal workflow:
 
-1. Internal reviewer opens the workspace.
-2. Reviewer pastes prospect notes or enters known account facts.
-3. Backend extracts structured lead fields.
-4. Missing fields remain visible in the lead summary panel.
-5. PocketFlow runs the lead state through deterministic matrix rules.
-6. The assistant returns the tier, reason, and updated state.
-7. Future phases can persist the result into a saved-leads review page.
+- ABC Energy branded internal qualification workspace.
+- Guided chat interface for pasted prospect notes.
+- Quick-start prompts for common reviewer workflows.
+- Structured lead summary panel.
+- Missing-field tracking.
+- Deterministic Strategic Lead Matrix classification.
+- Saved leads panel for recent qualification sessions.
+- Deployed frontend and backend.
 
-```mermaid
-flowchart LR
-    A["Prospect notes"] --> B["Extract facts"]
-    B --> C["Merge LeadState"]
-    C --> D["Estimate usage fallback"]
-    D --> E["Strategic Lead Matrix"]
-    E --> F{"Ready to tier?"}
-    F -->|Yes| G["Return tier and reason"]
-    F -->|No| H["Ask next missing-field question"]
-```
+We completed the backend foundation:
+
+- `POST /api/v1/lead/turn` for one qualification turn.
+- `GET /api/v1/lead/sessions` for recent saved leads.
+- Explicit `LeadState` model with `unknown`, `inferred`, and `confirmed` slot status.
+- PocketFlow orchestration for extract, merge, estimate, classify, plan, and respond.
+- Deterministic Python rule engine for tiering.
+- Square-footage fallback when annual usage is unavailable.
+- Gemini extraction integration behind a deterministic fallback.
+- PostgreSQL persistence for sessions and turns.
+- Alembic migration for lead persistence tables.
+- Focused pytest coverage for rules, extraction, evaluation cases, and persistence.
+
+## Senior Engineering Problems Resolved
+
+We resolved 13 senior SWE-level problems in the PoC:
+
+| # | Problem | How it was handled |
+|---:|---|---|
+| 1 | Product ambiguity | Clarified the tool as internal CRA/sales review, not customer-facing intake. |
+| 2 | MVP scope control | Avoided building full SaaS auth, RAG, and admin workflows before proving the qualification loop. |
+| 3 | Architecture choice | Used Next.js on Netlify, FastAPI on Azure VM, and PostgreSQL on the VM. |
+| 4 | Domain rebranding | Reworked the app around ABC Energy Solutions and lead qualification. |
+| 5 | Deterministic business rules | Kept the Strategic Lead Matrix in Python instead of letting the LLM decide. |
+| 6 | Slot filling | Added explicit lead state with known, missing, inferred, and confirmed fields. |
+| 7 | Controlled orchestration | Used PocketFlow for a small per-turn graph instead of a heavy agent platform. |
+| 8 | Chat workflow | Let reviewers paste unstructured notes while still receiving structured outputs. |
+| 9 | Fallback estimation | Added square-footage usage estimation when annual MWh is missing. |
+| 10 | Persistence | Saved lead sessions and turns in PostgreSQL. |
+| 11 | Review surface | Added a saved leads panel instead of building a full admin module. |
+| 12 | LLM reliability | Wired Gemini extraction but kept deterministic fallback when the model is unavailable. |
+| 13 | Deployment | Shipped a live Netlify frontend, Azure VM backend, proxy routing, and health checks. |
+
+## Bonus Coverage
+
+We completed 4 solid bonus items and 2 partial bonus items.
+
+| Bonus area | Status | Notes |
+|---|---|---|
+| Agent orchestration | Complete | PocketFlow coordinates extract, merge, estimate, classify, next-question planning, and response. |
+| Evaluation framework | Complete | Pytest eval cases cover matrix scenarios and fallback behavior. |
+| Persistence | Complete | PostgreSQL stores sessions and turns, with a frontend saved-leads panel. |
+| Production deployment | Complete | Netlify frontend and Azure VM backend are live. |
+| LLM extraction | Partial | Gemini is integrated, but deterministic extraction remains the reliability fallback. |
+| Observability | Partial | Responses include trace/source information, but there is no Langfuse or Phoenix dashboard yet. |
+| RAG | Not built | Deferred because no tariff PDFs, internal policy docs, or knowledge base were required for the MVP. |
+| Full admin panel | Not built | A saved-leads panel covers the demo need without building full admin CRUD. |
+| TTFT/high concurrency optimization | Not fully built | The app uses deterministic fallback and multiple backend workers, but streaming/load testing is out of PoC scope. |
 
 ## Strategic Lead Matrix
 
@@ -97,6 +151,24 @@ flowchart LR
 | Commercial, usage 20-50 MWh, fixed term, building age under 2 years | Tier 3 |
 | Any segment with no current provider | Tier 1 |
 | Complete but unmatched profile | Manual Review |
+
+The LLM is allowed to help extract facts. It is not allowed to override these rules.
+
+## User Flow
+
+```mermaid
+flowchart LR
+    A["Internal reviewer"] --> B["Paste call, CRM, spreadsheet, or research notes"]
+    B --> C["Extract lead facts"]
+    C --> D["Merge into LeadState"]
+    D --> E["Estimate usage if needed"]
+    E --> F["Run Strategic Lead Matrix"]
+    F --> G{"Enough information?"}
+    G -->|Yes| H["Return tier and reason"]
+    G -->|No| I["Ask next missing-field question"]
+    H --> J["Persist session and show in Saved Leads"]
+    I --> J
+```
 
 ## Try These Scenarios
 
@@ -128,20 +200,19 @@ Expected: `Tier 1`
 
 ## Architecture
 
-| Layer | Choice | Notes |
+| Layer | Choice | Why |
 |---|---|---|
-| Frontend | Next.js 15, React 19, TypeScript, Tailwind | Deployed on Netlify |
-| Backend | FastAPI, Pydantic v2 | Deployed on Azure VM |
-| Orchestration | PocketFlow | Small, explicit per-turn flow |
-| Database | PostgreSQL | Running in Docker on the VM |
-| LLM target | Google Gemini | API key configured, extraction integration is next |
-| Deployment | Netlify + Azure VM | Netlify proxies lead API calls to backend |
-
-The current MVP uses deterministic extraction and deterministic tiering. This was intentional for the hiring test: it reduces moving parts and makes the business matrix easy to validate. The next step is to add Gemini structured extraction as a fallback-enhanced extractor while keeping the matrix rules deterministic.
+| Frontend | Next.js 15, React 19, TypeScript, Tailwind | Fast to build, deployable to Netlify, good for an internal tool UI. |
+| Backend | FastAPI, Pydantic v2 | Strong API ergonomics, typed schemas, quick validation. |
+| Orchestration | PocketFlow | Tiny flow framework that fits the "collect variables before conclusion" problem. |
+| Rules | Deterministic Python | Keeps the matrix explainable, testable, and auditable. |
+| LLM | Google Gemini through PydanticAI | Used for structured extraction, not final tier decisions. |
+| Database | PostgreSQL | Stores lead sessions and turn history. |
+| Deployment | Netlify + Azure VM | Matches the requested deployment target. |
 
 ## API Contract
 
-### Request
+### Lead Turn Request
 
 ```http
 POST /api/v1/lead/turn
@@ -156,7 +227,7 @@ Content-Type: application/json
 }
 ```
 
-### Response
+### Lead Turn Response
 
 ```json
 {
@@ -174,11 +245,30 @@ Content-Type: application/json
     "matched_rule": "industrial_high_usage_expiring_soon"
   },
   "trace": {
-    "source": "pocketflow",
+    "source": "gemini+pocketflow",
     "nodes": ["extract", "merge", "estimate_usage", "classify", "plan_next_question", "respond"]
   }
 }
 ```
+
+When Gemini is unavailable or returns an error, the response still completes through deterministic extraction and the trace source reports the fallback path.
+
+## What We Intentionally Did Not Fully Build
+
+This was a PoC, so we did not pretend it was a finished enterprise system.
+
+| Area | Decision |
+|---|---|
+| Authentication | Left open for the demo. For production, add staff auth or Netlify password protection. |
+| Full admin panel | Deferred. The saved-leads panel is enough to demonstrate stored lead review. |
+| RAG | Deferred. RAG becomes useful once ABC provides tariff PDFs, internal qualification docs, or policy material. |
+| CRM/calendar integration | Deferred. Composio or direct CRM APIs would be appropriate only after confirming the target CRM. |
+| Advanced observability | Partial only. The app exposes traces in responses, but does not run Langfuse, Phoenix, or Grafana. |
+| Streaming and TTFT tuning | Deferred. The MVP is request/response. Streaming is a good next step if chat latency becomes the demo focus. |
+| Backend domain/TLS | Netlify currently proxies to the VM by IP. A real backend domain behind Caddy or Nginx would be cleaner. |
+| Hardening and rate limits | Deferred. Needed before exposing the tool to a broader audience. |
+
+These omissions are intentional scope control. The PoC proves the core loop: internal notes in, structured lead state, deterministic matrix tier, saved review output.
 
 ## Local Development
 
@@ -186,14 +276,14 @@ Content-Type: application/json
 
 ```bash
 cd backend
-uv run --extra dev pytest tests/test_lead_qualification.py
 uv run uvicorn app.main:app --reload
 ```
 
-Backend defaults to:
+Run focused tests:
 
-```text
-http://localhost:8000
+```bash
+cd backend
+python -m pytest -p no:cacheprovider tests/test_lead_qualification.py tests/test_lead_evals.py tests/test_lead_persistence.py
 ```
 
 ### Frontend
@@ -210,11 +300,10 @@ Frontend defaults to:
 http://localhost:3000
 ```
 
-For local frontend-to-backend wiring:
+Backend defaults to:
 
-```bash
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_WS_URL=ws://localhost:8000
+```text
+http://localhost:8000
 ```
 
 ## Environment Variables
@@ -237,7 +326,7 @@ API_KEY=...
 CORS_ORIGINS=["https://dirm02-onittest-abc-energy.netlify.app","http://52.165.83.50:8000"]
 ```
 
-Do not put `GOOGLE_API_KEY` in Netlify for this architecture. The frontend talks to the backend, and only the backend should call Gemini.
+Do not put `GOOGLE_API_KEY` in Netlify for this architecture. The frontend talks to the backend, and only the backend calls Gemini.
 
 ## Verification
 
@@ -245,8 +334,8 @@ Backend:
 
 ```bash
 cd backend
-python -m pytest -p no:cacheprovider tests/test_lead_qualification.py
-python -m ruff check app/lead_qualification tests/test_lead_qualification.py
+python -m pytest -p no:cacheprovider tests/test_lead_qualification.py tests/test_lead_evals.py tests/test_lead_persistence.py
+python -m ruff check app/lead_qualification tests/test_lead_qualification.py tests/test_lead_evals.py tests/test_lead_persistence.py
 ```
 
 Frontend:
@@ -270,8 +359,6 @@ Netlify reads `netlify.toml`.
 npx netlify deploy --prod --build
 ```
 
-The Next.js runtime plugin is enabled so App Router pages, middleware, and generated server functions work on Netlify.
-
 ### Backend
 
 Azure VM backend deployment uses:
@@ -281,28 +368,23 @@ docker-compose.azure.yml
 scripts/deploy-prod3-backend.sh
 ```
 
-The VM-specific compose file exposes FastAPI on port `8000` and keeps PostgreSQL internal.
+The VM-specific compose file runs FastAPI on port `8000`, runs Alembic migrations at container start, and keeps PostgreSQL internal.
 
-## Current Limitations
+## Next Production Steps
 
-- The lead endpoint is unauthenticated for the MVP demo.
-- Gemini is configured but not yet integrated into the lead extraction flow.
-- Lead conversations are not yet persisted into Postgres.
-- Admin/saved-leads review is planned but not part of the current MVP surface.
-- Netlify currently proxies to the VM by IP. A proper domain and TLS for the backend would be cleaner for production.
+If this PoC were promoted into a production project, the next phase would be:
 
-## Next Steps
-
-1. Add Gemini structured extraction behind the existing extractor interface.
-2. Persist conversations and final lead profiles into PostgreSQL.
-3. Add a saved-leads page for internal review.
-4. Add lightweight staff authentication or Netlify password protection.
-5. Add tracing with Langfuse or Phoenix for extraction and model calls.
-6. Add an evaluation set for the Strategic Lead Matrix scenarios.
+1. Add staff authentication.
+2. Add rate limiting and request logging.
+3. Add Langfuse or Phoenix tracing for Gemini calls.
+4. Add a small admin page for lead filtering/export.
+5. Add RAG only when ABC provides real documents.
+6. Put the backend behind a proper domain with TLS.
+7. Load-test the API and add streaming if TTFT becomes important.
 
 ## Project Status
 
-The MVP is deployed and usable end to end. The live system can classify the core matrix scenarios, route lead API calls through Netlify to Azure, and display a clear internal qualification workflow for ABC Energy Solutions.
+The MVP is deployed and usable end to end. It resolves the core hiring challenge, demonstrates senior engineering judgment around scope and reliability, and leaves clearly documented production enhancements for a later phase.
 
 ## License
 

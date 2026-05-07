@@ -11,7 +11,7 @@ Build a proof of concept for ABC Energy Solutions that helps internal sales, CRA
 - Explicit lead state with unknown, inferred, and confirmed slots.
 - Deterministic Strategic Lead Matrix rule engine.
 - Square-footage fallback when annual usage is unknown.
-- PostgreSQL-ready conversation and qualification persistence.
+- PostgreSQL conversation and qualification persistence.
 - Lightweight orchestration with PocketFlow.
 - React/TypeScript frontend deployed to Netlify.
 - FastAPI backend deployed to an Azure VM.
@@ -37,7 +37,7 @@ Each internal reviewer turn runs through a controlled flow:
 6. Ask the next missing-field question or finalize the tier.
 7. Return the assistant response, state, missing fields, and trace.
 
-The LLM is used for natural language and future structured extraction. The tier decision remains deterministic Python logic.
+Gemini can assist with structured extraction, while deterministic extraction remains available as a reliability fallback. The tier decision remains deterministic Python logic.
 
 ## Phases
 
@@ -76,6 +76,14 @@ The LLM is used for natural language and future structured extraction. The tier 
 - Document Netlify frontend deployment.
 - Document Azure VM backend deployment.
 - Document performance, concurrency, observability, and future RAG/eval extensions.
+
+### Phase 5: PoC Bonus Coverage
+
+- Add Gemini extraction behind the deterministic fallback.
+- Persist lead sessions and turn history in PostgreSQL.
+- Add a saved-leads review panel for the internal team.
+- Add evaluation cases for the Strategic Lead Matrix.
+- Keep RAG, full admin, authentication, and advanced observability documented as production follow-ups.
 
 ## Deployment Shape
 
