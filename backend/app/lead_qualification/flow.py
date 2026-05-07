@@ -6,7 +6,7 @@ from pocketflow import Flow, Node
 from pydantic import BaseModel
 
 from app.lead_qualification.estimator import estimate_usage_from_square_footage
-from app.lead_qualification.extractor import extract_lead_updates, merge_state
+from app.lead_qualification.extractor import extract_lead_updates_with_trace, merge_state
 from app.lead_qualification.planner import build_response, plan_next_question
 from app.lead_qualification.rules import LeadClassification, classify_lead
 from app.lead_qualification.state import LeadState
@@ -60,6 +60,7 @@ class LeadQualificationFlow:
             ],
             "source": "pocketflow",
             "extracted": shared["extracted"].model_dump(mode="json"),
+            "extraction": shared["extraction_trace"],
             "estimated_usage_applied": shared["estimated_usage_applied"],
             "matched_rule": classification.matched_rule,
             "next_question": next_question,
@@ -80,11 +81,18 @@ class ExtractLeadFactsNode(Node):
     def prep(self, shared: dict[str, Any]) -> str:
         return str(shared["message"])
 
-    def exec(self, message: str) -> LeadState:
-        return extract_lead_updates(message)
+    def exec(self, message: str) -> tuple[LeadState, dict[str, Any]]:
+        return extract_lead_updates_with_trace(message)
 
-    def post(self, shared: dict[str, Any], prep_res: str, exec_res: LeadState) -> None:
-        shared["extracted"] = exec_res
+    def post(
+        self,
+        shared: dict[str, Any],
+        prep_res: str,
+        exec_res: tuple[LeadState, dict[str, Any]],
+    ) -> None:
+        extracted, extraction_trace = exec_res
+        shared["extracted"] = extracted
+        shared["extraction_trace"] = extraction_trace
 
 
 class MergeLeadStateNode(Node):

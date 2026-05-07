@@ -29,6 +29,25 @@ class LeadTurnResponse(BaseSchema):
     trace: dict[str, Any]
 
 
+class LeadSessionSummary(BaseSchema):
+    """Saved lead qualification session summary."""
+
+    session_id: str
+    latest_state: LeadState
+    final_tier: str | None = None
+    matched_rule: str | None = None
+    reason: str | None = None
+    source: str | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
+
+
+class LeadSessionsResponse(BaseSchema):
+    """Response payload for saved lead sessions."""
+
+    items: list[LeadSessionSummary]
+
+
 def new_lead_session_id() -> str:
     """Create a lightweight client-managed lead session id."""
     return str(uuid4())

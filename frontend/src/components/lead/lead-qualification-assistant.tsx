@@ -20,6 +20,7 @@ import { Badge, Button, Progress, ScrollArea, Separator, Textarea } from "@/comp
 import { getInitialLeadState, postLeadTurn } from "@/lib/lead-api";
 import { cn } from "@/lib/utils";
 import type { LeadSlotKey, LeadState, LeadTurnResponse } from "@/types/lead";
+import { SavedLeadsPanel } from "./saved-leads-panel";
 
 type ChatMessage = {
   id: string;
@@ -86,6 +87,7 @@ export function LeadQualificationAssistant() {
   ]);
   const [isSending, setIsSending] = useState(false);
   const [lastTraceSource, setLastTraceSource] = useState("waiting");
+  const [savedLeadsRefreshKey, setSavedLeadsRefreshKey] = useState(0);
 
   const completedSlots = useMemo(
     () => slots.filter((slot) => Boolean(readSlot(leadState, slot.key))).length,
@@ -118,6 +120,7 @@ export function LeadQualificationAssistant() {
     setLeadState(result.state);
     setMissingFields(result.missing_fields);
     setLastTraceSource(getTraceSource(result.trace));
+    setSavedLeadsRefreshKey((current) => current + 1);
     setMessages((current) => [
       ...current,
       {
@@ -248,65 +251,68 @@ export function LeadQualificationAssistant() {
             </form>
           </div>
 
-          <aside className="rounded-lg border border-[#d9ded1] bg-white">
-            <div className="p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-base font-semibold">Lead summary</h2>
-                  <p className="mt-1 text-sm text-[#5f6b62]">
-                    Internal qualification fields update from the backend state.
-                  </p>
-                </div>
-                <div className="rounded-lg bg-[#eef6f8] p-2 text-[#28505e]">
-                  <ArrowUpRight className="h-4 w-4" />
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <div className="mb-2 flex items-center justify-between text-sm">
-                  <span className="font-medium">
-                    {completedSlots} of {slots.length}
-                  </span>
-                  <span className="text-[#5f6b62]">{progress}% complete</span>
-                </div>
-                <Progress className="bg-[#e5ebdf] [&>div]:bg-[#2f6f4e]" value={progress} />
-              </div>
-            </div>
-
-            <Separator className="bg-[#e2e5dd]" />
-
-            <div className="space-y-3 p-4">
-              {slots.map((slot) => {
-                const value = readSlot(leadState, slot.key);
-                const isMissing = slot.key !== "tier_status" && missingFields.includes(slot.key);
-                const Icon = slot.icon;
-
-                return (
-                  <div
-                    className="rounded-lg border border-[#e2e5dd] bg-[#fbfcf8] p-3"
-                    key={slot.key}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <Icon className="h-4 w-4 shrink-0 text-[#2f6f4e]" />
-                        <span className="truncate text-sm font-medium">{slot.label}</span>
-                      </div>
-                      {value && !isMissing ? (
-                        <CheckCircle2 className="h-4 w-4 shrink-0 text-[#2f6f4e]" />
-                      ) : null}
-                    </div>
-                    <p
-                      className={cn(
-                        "mt-2 min-h-5 text-sm",
-                        value ? "text-[#253027]" : "text-[#899286]",
-                      )}
-                    >
-                      {value ? String(value) : "Not captured"}
+          <aside className="space-y-4">
+            <section className="rounded-lg border border-[#d9ded1] bg-white">
+              <div className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-base font-semibold">Lead summary</h2>
+                    <p className="mt-1 text-sm text-[#5f6b62]">
+                      Internal qualification fields update from the backend state.
                     </p>
                   </div>
-                );
-              })}
-            </div>
+                  <div className="rounded-lg bg-[#eef6f8] p-2 text-[#28505e]">
+                    <ArrowUpRight className="h-4 w-4" />
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <div className="mb-2 flex items-center justify-between text-sm">
+                    <span className="font-medium">
+                      {completedSlots} of {slots.length}
+                    </span>
+                    <span className="text-[#5f6b62]">{progress}% complete</span>
+                  </div>
+                  <Progress className="bg-[#e5ebdf] [&>div]:bg-[#2f6f4e]" value={progress} />
+                </div>
+              </div>
+
+              <Separator className="bg-[#e2e5dd]" />
+
+              <div className="space-y-3 p-4">
+                {slots.map((slot) => {
+                  const value = readSlot(leadState, slot.key);
+                  const isMissing = slot.key !== "tier_status" && missingFields.includes(slot.key);
+                  const Icon = slot.icon;
+
+                  return (
+                    <div
+                      className="rounded-lg border border-[#e2e5dd] bg-[#fbfcf8] p-3"
+                      key={slot.key}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <Icon className="h-4 w-4 shrink-0 text-[#2f6f4e]" />
+                          <span className="truncate text-sm font-medium">{slot.label}</span>
+                        </div>
+                        {value && !isMissing ? (
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-[#2f6f4e]" />
+                        ) : null}
+                      </div>
+                      <p
+                        className={cn(
+                          "mt-2 min-h-5 text-sm",
+                          value ? "text-[#253027]" : "text-[#899286]",
+                        )}
+                      >
+                        {value ? String(value) : "Not captured"}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+            <SavedLeadsPanel refreshKey={savedLeadsRefreshKey} />
           </aside>
         </section>
       </div>

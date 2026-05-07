@@ -60,3 +60,19 @@ export interface LeadTurnResponse {
   classification: LeadClassification;
   trace?: unknown;
 }
+
+export interface LeadSession {
+  session_id: string;
+  final_tier?: string | null;
+  matched_rule?: string | null;
+  reason?: string | null;
+  source?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  latest_state?: LeadState | null;
+}
+
+export interface LeadSessionsResponse {
+  items: LeadSession[];
+  unavailable?: boolean;
+}

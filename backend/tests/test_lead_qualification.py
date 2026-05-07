@@ -10,6 +10,12 @@ from app.lead_qualification.rules import classify_lead
 from app.lead_qualification.state import LeadSlot, SlotStatus
 
 
+@pytest.fixture(autouse=True)
+def disable_live_llm(monkeypatch):
+    """Keep qualification tests deterministic and offline."""
+    monkeypatch.setattr("app.core.config.settings.GOOGLE_API_KEY", "")
+
+
 def test_industrial_high_usage_expiring_soon_is_tier_1():
     state = LeadState(
         business_segment=LeadSlot(value="industrial", status=SlotStatus.CONFIRMED),

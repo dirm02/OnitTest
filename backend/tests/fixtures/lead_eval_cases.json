@@ -1,0 +1,105 @@
+[
+  {
+    "id": "industrial_high_usage_expiring_soon",
+    "message": "Industrial plant using 650 MWh annually. We have a provider and the contract expires in 5 months.",
+    "expected_state": {
+      "business_segment": "industrial",
+      "annual_usage_mwh": 650.0,
+      "has_provider": true,
+      "expiry_months": 5
+    },
+    "expected_tier": "Tier 1",
+    "expected_rule": "industrial_high_usage_expiring_soon"
+  },
+  {
+    "id": "industrial_mid_usage_new_building",
+    "message": "Manufacturing facility, usage is 250 MWh, provider in place, renewal is in 11 months, building is 4 years old.",
+    "expected_state": {
+      "business_segment": "industrial",
+      "annual_usage_mwh": 250.0,
+      "has_provider": true,
+      "expiry_months": 11,
+      "building_age_years": 4
+    },
+    "expected_tier": "Tier 2",
+    "expected_rule": "industrial_mid_usage_new_building"
+  },
+  {
+    "id": "commercial_high_usage_month_to_month",
+    "message": "Commercial office with 72 MWh annual usage. We have a current provider and are month-to-month.",
+    "expected_state": {
+      "business_segment": "commercial",
+      "annual_usage_mwh": 72.0,
+      "has_provider": true,
+      "contract_status": "month_to_month"
+    },
+    "expected_tier": "Tier 1",
+    "expected_rule": "commercial_high_usage_month_to_month"
+  },
+  {
+    "id": "commercial_fixed_new_building",
+    "message": "Commercial retail store, 35 MWh per year, fixed-term contract, current provider, 1-year-old building.",
+    "expected_state": {
+      "business_segment": "commercial",
+      "annual_usage_mwh": 35.0,
+      "has_provider": true,
+      "contract_status": "fixed_term",
+      "building_age_years": 1
+    },
+    "expected_tier": "Tier 3",
+    "expected_rule": "commercial_mid_usage_fixed_new_building"
+  },
+  {
+    "id": "no_provider_any_segment",
+    "message": "Restaurant lead with no current electricity provider. Usage is only 12 MWh.",
+    "expected_state": {
+      "business_segment": "commercial",
+      "annual_usage_mwh": 12.0,
+      "has_provider": false
+    },
+    "expected_tier": "Tier 1",
+    "expected_rule": "any_no_current_provider"
+  },
+  {
+    "id": "explicit_commercial_warehouse",
+    "message": "This is a commercial warehouse using 40 MWh annually. We have a provider, fixed term, building is 1 year old.",
+    "expected_state": {
+      "business_segment": "commercial",
+      "annual_usage_mwh": 40.0,
+      "has_provider": true,
+      "contract_status": "fixed_term",
+      "building_age_years": 1
+    },
+    "expected_tier": "Tier 3",
+    "expected_rule": "commercial_mid_usage_fixed_new_building"
+  },
+  {
+    "id": "square_footage_estimation",
+    "message": "Commercial office, 6,000 square feet, provider in place, month-to-month, building is 3 years old.",
+    "expected_state": {
+      "business_segment": "commercial",
+      "square_footage": 6000,
+      "annual_usage_mwh": 72.0,
+      "has_provider": true,
+      "contract_status": "month_to_month",
+      "building_age_years": 3
+    },
+    "expected_tier": "Tier 1",
+    "expected_rule": "commercial_high_usage_month_to_month"
+  },
+  {
+    "id": "complete_manual_review",
+    "message": "Commercial clinic, usage 10 MWh, 2,000 square feet, fixed contract, provider in place, expires in 18 months, building is 10 years old.",
+    "expected_state": {
+      "business_segment": "commercial",
+      "annual_usage_mwh": 10.0,
+      "square_footage": 2000,
+      "has_provider": true,
+      "contract_status": "fixed_term",
+      "expiry_months": 18,
+      "building_age_years": 10
+    },
+    "expected_tier": "Manual Review",
+    "expected_rule": null
+  }
+]

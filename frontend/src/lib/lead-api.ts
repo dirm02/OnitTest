@@ -1,6 +1,8 @@
 import type {
   BackendLeadState,
   LeadClassification,
+  LeadSession,
+  LeadSessionsResponse,
   LeadSlotKey,
   LeadState,
   LeadTurnRequest,
@@ -10,6 +12,7 @@ import type {
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:8000";
 
 const LEAD_ENDPOINT = `${BACKEND_URL}/api/v1/lead/turn`;
+const LEAD_SESSIONS_ENDPOINT = `${BACKEND_URL}/api/v1/lead/sessions`;
 
 const REQUIRED_FIELDS: LeadSlotKey[] = [
   "segment",
@@ -67,13 +70,47 @@ export async function postLeadTurn(
   }
 }
 
+export async function getLeadSessions(): Promise<LeadSessionsResponse> {
+  try {
+    const response = await fetch(LEAD_SESSIONS_ENDPOINT, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Lead sessions endpoint returned ${response.status}`);
+    }
+
+    return normalizeLeadSessionsResponse((await response.json()) as LeadSessionsResponse);
+  } catch {
+    return { items: [], unavailable: true };
+  }
+}
+
 export function getInitialLeadState(): LeadState {
   return { ...emptyState };
 }
 
+export function readLeadSlot(state: LeadState | null | undefined, key: LeadSlotKey) {
+  if (!state) return undefined;
+
+  if (key === "tier_status") {
+    return (
+      state.slots?.tier_status ??
+      primitiveSlotValue(state.tier_status) ??
+      slotLabel(state.backend_state?.final_tier) ??
+      [state.tier, state.status].filter(Boolean).join(": ") ??
+      undefined
+    );
+  }
+
+  return state.slots?.[key] ?? primitiveSlotValue(state[key]) ?? readBackendSlot(state, key);
+}
+
 function mockLeadTurn(request: LeadTurnRequest, currentState: LeadState): LeadTurnResponse {
   const nextState = inferStateFromMessage(request.message, currentState);
-  const missingFields = REQUIRED_FIELDS.filter((field) => !readSlot(nextState, field));
+  const missingFields = REQUIRED_FIELDS.filter((field) => !readLeadSlot(nextState, field));
   const classification = classifyLead(nextState, missingFields);
   const tierStatus = classificationToLabel(classification);
   const state = { ...nextState, tier_status: tierStatus };
@@ -92,7 +129,7 @@ function inferStateFromMessage(message: string, currentState: LeadState): LeadSt
   const normalized = message.toLowerCase();
   const nextState: LeadState = { ...emptyState, ...currentState };
 
-  if (!readSlot(nextState, "segment")) {
+  if (!readLeadSlot(nextState, "segment")) {
     const segment = matchFirst(normalized, [
       ["manufactur", "Manufacturing"],
       ["warehouse", "Warehouse / logistics"],
@@ -127,7 +164,7 @@ function inferStateFromMessage(message: string, currentState: LeadState): LeadSt
     ["utility", "Utility default service"],
   ]);
   if (provider) nextState.provider_contract = provider;
-  if (normalized.includes("contract") && !readSlot(nextState, "provider_contract")) {
+  if (normalized.includes("contract") && !readLeadSlot(nextState, "provider_contract")) {
     nextState.provider_contract = "Contract details pending";
   }
 
@@ -155,8 +192,8 @@ function classifyLead(
   state: LeadState,
   missingFields: LeadSlotKey[],
 ): Exclude<LeadClassification, string | null> {
-  const usage = String(readSlot(state, "usage") || "");
-  const squareFootage = String(readSlot(state, "square_footage") || "");
+  const usage = String(readLeadSlot(state, "usage") || "");
+  const squareFootage = String(readLeadSlot(state, "square_footage") || "");
   const numericUsage = Number(usage.replace(/[^\d.]/g, ""));
   const numericFootage = Number(squareFootage.replace(/[^\d.]/g, ""));
   const isHighPotential =
@@ -193,20 +230,6 @@ function buildMockResponse(message: string, missingFields: LeadSlotKey[], tierSt
   return `I captured that. Next, I need ${formatMissingFields(missingFields)} from the record or reviewer to complete the ABC Energy qualification.`;
 }
 
-function readSlot(state: LeadState, key: LeadSlotKey) {
-  if (key === "tier_status") {
-    return (
-      state.slots?.tier_status ??
-      primitiveSlotValue(state.tier_status) ??
-      slotLabel(state.backend_state?.final_tier) ??
-      [state.tier, state.status].filter(Boolean).join(": ") ??
-      undefined
-    );
-  }
-
-  return state.slots?.[key] ?? primitiveSlotValue(state[key]) ?? readBackendSlot(state, key);
-}
-
 function normalizeLeadResponse(response: LeadTurnResponse): LeadTurnResponse {
   const state = normalizeLeadState(response.state || getInitialLeadState());
 
@@ -215,6 +238,21 @@ function normalizeLeadResponse(response: LeadTurnResponse): LeadTurnResponse {
     state,
     missing_fields: normalizeMissingFields(response.missing_fields || []),
     classification: response.classification ?? null,
+  };
+}
+
+function normalizeLeadSessionsResponse(response: LeadSessionsResponse): LeadSessionsResponse {
+  const items = Array.isArray(response.items) ? response.items : [];
+
+  return {
+    items: items.map(normalizeLeadSession),
+  };
+}
+
+function normalizeLeadSession(session: LeadSession): LeadSession {
+  return {
+    ...session,
+    latest_state: session.latest_state ? normalizeLeadState(session.latest_state) : null,
   };
 }
 
@@ -265,7 +303,11 @@ function normalizeLeadState(rawState: LeadState): LeadState {
   const contract = slotLabel(backendState.contract_status);
   if (provider !== undefined || contract) {
     const providerLabel =
-      provider === "false" ? "No current provider" : provider === "true" ? "Provider in place" : undefined;
+      provider === "false"
+        ? "No current provider"
+        : provider === "true"
+          ? "Provider in place"
+          : undefined;
     slots.provider_contract = [providerLabel, formatContractStatus(contract)]
       .filter(Boolean)
       .join(" / ");
@@ -313,7 +355,9 @@ function readBackendSlot(state: LeadState, key: LeadSlotKey) {
 }
 
 function slotLabel(slot: unknown) {
-  if (!slot || typeof slot !== "object" || !("value" in slot)) return undefined;
+  if (slot === null || slot === undefined || slot === "") return undefined;
+  if (typeof slot !== "object") return primitiveSlotValue(slot);
+  if (!("value" in slot)) return undefined;
   const value = (slot as { value?: unknown }).value;
   if (value === null || value === undefined || value === "") return undefined;
   return String(value);

@@ -7,7 +7,7 @@ See: https://anyio.readthedocs.io/en/stable/testing.html
 # ruff: noqa: I001 - Imports structured for Jinja2 template conditionals
 
 from collections.abc import AsyncGenerator
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -30,10 +30,16 @@ def anyio_backend() -> str:
 async def mock_db_session() -> AsyncGenerator[AsyncMock, None]:
     """Create a mock database session for testing."""
     mock = AsyncMock()
-    mock.execute = AsyncMock()
+    empty_result = MagicMock()
+    empty_result.scalar_one_or_none.return_value = None
+    empty_scalars = MagicMock()
+    empty_scalars.all.return_value = []
+    empty_result.scalars.return_value = empty_scalars
+    mock.execute = AsyncMock(return_value=empty_result)
     mock.commit = AsyncMock()
     mock.rollback = AsyncMock()
     mock.close = AsyncMock()
+    mock.add = MagicMock()
     yield mock
 
 

@@ -6,6 +6,7 @@ changing the flow contract.
 """
 
 import re
+from typing import Any
 
 from app.lead_qualification.state import LeadSlot, LeadState, SlotStatus
 
@@ -94,6 +95,52 @@ def extract_lead_updates(message: str) -> LeadState:
     return updates
 
 
+def extract_lead_updates_with_trace(
+    message: str,
+    *,
+    prefer_llm: bool = True,
+) -> tuple[LeadState, dict[str, Any]]:
+    """Extract lead updates with optional LLM enrichment and deterministic fallback."""
+    deterministic_updates = extract_lead_updates(message)
+    deterministic_fields = _known_fields(deterministic_updates)
+
+    trace: dict[str, Any] = {
+        "source": "deterministic_regex",
+        "deterministic_fields": deterministic_fields,
+        "llm_enabled": False,
+        "llm_fields": [],
+        "llm_error": None,
+    }
+
+    if not prefer_llm:
+        return deterministic_updates, trace
+
+    try:
+        from app.lead_qualification.llm_extractor import (
+            LLMExtractionUnavailableError,
+            extract_lead_updates_llm_sync,
+        )
+
+        llm_result = extract_lead_updates_llm_sync(message)
+    except LLMExtractionUnavailableError as exc:
+        trace["llm_error"] = str(exc)
+        return deterministic_updates, trace
+    except Exception as exc:  # pragma: no cover - exercised only with live provider failures
+        trace["llm_error"] = f"{type(exc).__name__}: {exc}"
+        return deterministic_updates, trace
+
+    trace.update(
+        {
+            "source": "deterministic_regex+gemini",
+            "llm_enabled": True,
+            "llm_model": llm_result.model,
+            "llm_fields": llm_result.fields,
+        }
+    )
+
+    return merge_state(llm_result.updates, deterministic_updates), trace
+
+
 def merge_state(existing: LeadState, updates: LeadState) -> LeadState:
     """Merge new confirmed/inferred slot updates into existing state."""
     merged = existing.model_copy(deep=True)
@@ -109,3 +156,12 @@ def merge_state(existing: LeadState, updates: LeadState) -> LeadState:
             continue
         setattr(merged, field, update_slot)
     return merged
+
+
+def _known_fields(state: LeadState) -> list[str]:
+    return [
+        field
+        for field in LeadState.model_fields
+        if getattr(state, field).status != SlotStatus.UNKNOWN
+        and getattr(state, field).value is not None
+    ]

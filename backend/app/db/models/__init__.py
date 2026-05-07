@@ -6,6 +6,7 @@ from app.db.models.conversation import Conversation, Message, ToolCall
 from app.db.models.chat_file import ChatFile
 from app.db.models.message_rating import MessageRating
 from app.db.models.conversation_share import ConversationShare
+from app.db.models.lead import LeadSession, LeadTurn
 
 __all__ = [
     "User",
@@ -15,4 +16,6 @@ __all__ = [
     "ChatFile",
     "MessageRating",
     "ConversationShare",
+    "LeadSession",
+    "LeadTurn",
 ]
