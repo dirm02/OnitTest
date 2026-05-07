@@ -197,14 +197,14 @@ function readSlot(state: LeadState, key: LeadSlotKey) {
   if (key === "tier_status") {
     return (
       state.slots?.tier_status ??
-      state.tier_status ??
+      primitiveSlotValue(state.tier_status) ??
       slotLabel(state.backend_state?.final_tier) ??
       [state.tier, state.status].filter(Boolean).join(": ") ??
       undefined
     );
   }
 
-  return state.slots?.[key] ?? state[key] ?? readBackendSlot(state, key);
+  return state.slots?.[key] ?? primitiveSlotValue(state[key]) ?? readBackendSlot(state, key);
 }
 
 function normalizeLeadResponse(response: LeadTurnResponse): LeadTurnResponse {
@@ -326,4 +326,11 @@ function formatContractStatus(value?: string) {
 
 function capitalize(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function primitiveSlotValue(value: unknown) {
+  if (value === null || value === undefined || value === "") return undefined;
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  return undefined;
 }

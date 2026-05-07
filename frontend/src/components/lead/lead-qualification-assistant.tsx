@@ -318,13 +318,20 @@ function readSlot(state: LeadState, key: LeadSlotKey) {
   if (key === "tier_status") {
     return (
       state.slots?.tier_status ??
-      state.tier_status ??
+      toDisplayValue(state.tier_status) ??
       [state.tier, state.status].filter(Boolean).join(": ") ??
       undefined
     );
   }
 
-  return state.slots?.[key] ?? state[key];
+  return state.slots?.[key] ?? toDisplayValue(state[key]);
+}
+
+function toDisplayValue(value: unknown) {
+  if (value === null || value === undefined || value === "") return undefined;
+  if (typeof value === "string" || typeof value === "number") return value;
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  return undefined;
 }
 
 function getTraceSource(trace: unknown) {
