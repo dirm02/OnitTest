@@ -103,3 +103,6 @@ logs/
 Thumbs.db
 
 # Project specific
+
+# Local Netlify folder
+.netlify
