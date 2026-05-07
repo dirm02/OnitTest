@@ -99,7 +99,7 @@ export function SavedLeadsPanel({ refreshKey = 0 }: SavedLeadsPanelProps) {
             }
           />
         ) : (
-          <ScrollArea className="max-h-[360px]">
+          <ScrollArea className="h-[320px] lg:h-[360px]">
             <div className="space-y-3 p-3">
               {sessions.map((session) => (
                 <SavedLeadRow key={session.session_id} session={session} />
