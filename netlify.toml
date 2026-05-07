@@ -7,9 +7,23 @@
 
 [context.production.environment]
   NEXT_PUBLIC_APP_ENV = "production"
+  NEXT_PUBLIC_API_URL = "https://dirm02-onittest-abc-energy.netlify.app"
+  NEXT_PUBLIC_WS_URL = "wss://dirm02-onittest-abc-energy.netlify.app"
 
 [context.deploy-preview.environment]
   NEXT_PUBLIC_APP_ENV = "preview"
+
+[[redirects]]
+  from = "/api/v1/lead/*"
+  to = "http://52.165.83.50:8000/api/v1/lead/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/v1/health"
+  to = "http://52.165.83.50:8000/api/v1/health"
+  status = 200
+  force = true
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
