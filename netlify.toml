@@ -15,13 +15,13 @@
 
 [[redirects]]
   from = "/api/v1/lead/*"
-  to = "http://52.165.83.50:8000/api/v1/lead/:splat"
+  to = "http://159.69.40.130:8000/api/v1/lead/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/api/v1/health"
-  to = "http://52.165.83.50:8000/api/v1/health"
+  to = "http://159.69.40.130:8000/api/v1/health"
   status = 200
   force = true
 
